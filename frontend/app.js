@@ -42,6 +42,17 @@ function renderFilters() {
   const host = document.getElementById("filters");
   host.innerHTML = "";
 
+  const tagInput = document.createElement("input");
+  tagInput.type = "search";
+  tagInput.className = "tag-filter";
+  tagInput.placeholder = "Filter by tag";
+  tagInput.value = filters.tag || "";
+  tagInput.onchange = () => {
+    filters.tag = tagInput.value.trim() || undefined;
+    loadBoard();
+  };
+  host.appendChild(tagInput);
+
   const overdueBtn = document.createElement("button");
   overdueBtn.className = "btn small" + (filters.overdue ? " active" : "");
   overdueBtn.textContent = "Overdue only";
@@ -100,7 +111,8 @@ function cardEl(t) {
   return card;
 }
 
-// Extra pills shown on a card. Feature 1: due date + overdue.
+// Extra pills/chips shown on a card. Feature 1: due date + overdue.
+// Feature 2: tag chips.
 function cardExtras(t) {
   const out = [];
   if (t.due_date) {
@@ -108,20 +120,30 @@ function cardExtras(t) {
     const label = t.overdue ? `Overdue ${t.due_date}` : `Due ${t.due_date}`;
     out.push(`<span class="${cls}">${label}</span>`);
   }
+  for (const tag of t.tags || []) {
+    out.push(`<span class="chip">${escapeHtml(tag)}</span>`);
+  }
   return out;
 }
 
-// Extra inputs in the modal. Feature 1: due date.
+// Extra inputs in the modal. Feature 1: due date. Feature 2: tags.
 function renderFeatureFields(task) {
+  const tagValue = task && task.tags ? escapeHtml(task.tags.join(", ")) : "";
+  const dueValue = task && task.due_date ? task.due_date : "";
   document.getElementById("feature-fields").innerHTML = `
     <label>Due date
-      <input id="f-due-date" type="date" value="${task && task.due_date ? task.due_date : ""}" />
+      <input id="f-due-date" type="date" value="${dueValue}" />
+    </label>
+    <label>Tags (comma-separated)
+      <input id="f-tags" type="text" value="${tagValue}" placeholder="ui, urgent" />
     </label>`;
 }
 
 function collectFeatureFields(payload) {
   const due = document.getElementById("f-due-date").value;
   payload.due_date = due || null;
+  const tagsRaw = document.getElementById("f-tags").value;
+  payload.tags = tagsRaw.split(",").map((t) => t.trim()).filter(Boolean);
 }
 
 function openModal(task = null) {

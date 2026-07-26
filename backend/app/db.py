@@ -36,6 +36,7 @@ def init_db() -> None:
                 priority    TEXT NOT NULL DEFAULT 'medium',
                 assignee    TEXT NOT NULL DEFAULT '',
                 due_date    TEXT,
+                tags        TEXT NOT NULL DEFAULT '',
                 created_at  TEXT NOT NULL,
                 updated_at  TEXT NOT NULL
             )

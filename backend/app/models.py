@@ -20,8 +20,32 @@ class Priority(str, Enum):
     high = "high"
 
 
+MAX_TAGS = 10
+MAX_TAG_LEN = 30
+
+
 def _clean_str(v: str) -> str:
     return v.strip() if isinstance(v, str) else v
+
+
+def _clean_tags(v):
+    """Trim tags, reject blank/comma/over-long, dedupe, cap the count."""
+    if v is None:
+        return v
+    cleaned: list[str] = []
+    for tag in v:
+        t = tag.strip() if isinstance(tag, str) else tag
+        if not t:
+            raise ValueError("tags must not be blank")
+        if "," in t:
+            raise ValueError("tags must not contain commas")
+        if len(t) > MAX_TAG_LEN:
+            raise ValueError(f"tag too long (max {MAX_TAG_LEN} chars)")
+        if t not in cleaned:
+            cleaned.append(t)
+    if len(cleaned) > MAX_TAGS:
+        raise ValueError(f"too many tags (max {MAX_TAGS})")
+    return cleaned
 
 
 class TaskCreate(BaseModel):
@@ -31,6 +55,7 @@ class TaskCreate(BaseModel):
     priority: Priority = Priority.medium
     assignee: str = ""
     due_date: date | None = None
+    tags: list[str] = []
 
     @field_validator("title")
     @classmethod
@@ -39,6 +64,11 @@ class TaskCreate(BaseModel):
         if not v:
             raise ValueError("title must not be blank")
         return v
+
+    @field_validator("tags")
+    @classmethod
+    def clean_tags(cls, v):
+        return _clean_tags(v)
 
 
 class TaskUpdate(BaseModel):
@@ -50,6 +80,7 @@ class TaskUpdate(BaseModel):
     priority: Priority | None = None
     assignee: str | None = None
     due_date: date | None = None
+    tags: list[str] | None = None
 
     @field_validator("title")
     @classmethod
@@ -61,6 +92,11 @@ class TaskUpdate(BaseModel):
             raise ValueError("title must not be blank")
         return v
 
+    @field_validator("tags")
+    @classmethod
+    def clean_tags(cls, v):
+        return _clean_tags(v)
+
 
 class Task(BaseModel):
     id: int
@@ -71,5 +107,6 @@ class Task(BaseModel):
     assignee: str
     due_date: date | None = None
     overdue: bool = False
+    tags: list[str] = []
     created_at: str
     updated_at: str

@@ -21,8 +21,14 @@ def is_overdue(due_date: str | None, status: str) -> bool:
 
 
 def enrich(task: dict) -> dict:
-    """Add computed fields (overdue) to a raw task row."""
+    """Turn a raw DB row into an API-shaped dict.
+
+    Adds the computed `overdue` flag and expands the comma-separated `tags`
+    column into a list.
+    """
     task["overdue"] = is_overdue(task.get("due_date"), task["status"])
+    raw_tags = task.get("tags") or ""
+    task["tags"] = [t for t in raw_tags.split(",") if t]
     return task
 
 
@@ -61,8 +67,8 @@ def create_task(payload: TaskCreate) -> dict:
         cur = conn.execute(
             """
             INSERT INTO tasks (title, description, status, priority, assignee,
-                               due_date, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                               due_date, tags, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 payload.title,
@@ -71,6 +77,7 @@ def create_task(payload: TaskCreate) -> dict:
                 payload.priority.value,
                 payload.assignee,
                 payload.due_date.isoformat() if payload.due_date else None,
+                ",".join(payload.tags),
                 ts,
                 ts,
             ),
@@ -85,6 +92,7 @@ def list_tasks(
     priority: Priority | None = None,
     assignee: str | None = None,
     overdue: bool | None = None,
+    tag: str | None = None,
 ) -> list[dict]:
     clauses, params = [], []
     if status is not None:
@@ -96,6 +104,10 @@ def list_tasks(
     if assignee is not None:
         clauses.append("assignee = ?")
         params.append(assignee)
+    if tag:
+        # Match a whole tag, not a substring, by wrapping both sides in commas.
+        clauses.append("(',' || COALESCE(tags, '') || ',') LIKE ?")
+        params.append(f"%,{tag},%")
     if overdue:
         # Overdue = past due date and not done. Matches is_overdue().
         clauses.append("due_date IS NOT NULL AND due_date < ? AND status != ?")
@@ -132,6 +144,8 @@ def update_task(task_id: int, payload: TaskUpdate) -> dict:
                     value = value.value
                 elif isinstance(value, date):
                     value = value.isoformat()
+                elif isinstance(value, list):
+                    value = ",".join(value)
                 sets.append(f"{key} = ?")
                 params.append(value)
             sets.append("updated_at = ?")

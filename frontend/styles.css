@@ -118,6 +118,15 @@ input, textarea, select {
 
 .filters { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .filters input { width: auto; }
+.tag-filter { max-width: 160px; }
+
+.chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #3730a3;
+  color: #e0e7ff;
+}
 
 .empty { color: var(--muted); font-size: 13px; padding: 8px 4px; }
 
