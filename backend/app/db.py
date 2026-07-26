@@ -35,6 +35,7 @@ def init_db() -> None:
                 status      TEXT NOT NULL DEFAULT 'todo',
                 priority    TEXT NOT NULL DEFAULT 'medium',
                 assignee    TEXT NOT NULL DEFAULT '',
+                due_date    TEXT,
                 created_at  TEXT NOT NULL,
                 updated_at  TEXT NOT NULL
             )

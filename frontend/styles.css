@@ -13,6 +13,11 @@
 
 * { box-sizing: border-box; }
 
+/* The `hidden` attribute must win over any element's own `display` rule
+   (e.g. .modal-backdrop uses display:flex, which would otherwise keep the
+   hidden modal on screen and intercepting clicks). */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
@@ -108,6 +113,11 @@ input, textarea, select {
   color: var(--text);
 }
 .pill.assignee { background: #334155; }
+.pill.due { background: #1e3a5f; color: #bfdbfe; }
+.pill.overdue { background: #7f1d1d; color: #fecaca; font-weight: 600; }
+
+.filters { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.filters input { width: auto; }
 
 .empty { color: var(--muted); font-size: 13px; padding: 8px 4px; }
 

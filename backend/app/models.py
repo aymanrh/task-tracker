@@ -2,6 +2,7 @@
 
 Baseline (Modules 1-3): title, description, status, priority, assignee.
 """
+from datetime import date
 from enum import Enum
 
 from pydantic import BaseModel, field_validator
@@ -29,6 +30,7 @@ class TaskCreate(BaseModel):
     status: Status = Status.todo
     priority: Priority = Priority.medium
     assignee: str = ""
+    due_date: date | None = None
 
     @field_validator("title")
     @classmethod
@@ -47,6 +49,7 @@ class TaskUpdate(BaseModel):
     status: Status | None = None
     priority: Priority | None = None
     assignee: str | None = None
+    due_date: date | None = None
 
     @field_validator("title")
     @classmethod
@@ -66,5 +69,7 @@ class Task(BaseModel):
     status: Status
     priority: Priority
     assignee: str
+    due_date: date | None = None
+    overdue: bool = False
     created_at: str
     updated_at: str

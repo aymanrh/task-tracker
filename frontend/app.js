@@ -38,6 +38,21 @@ function buildQuery() {
   return q ? `?${q}` : "";
 }
 
+function renderFilters() {
+  const host = document.getElementById("filters");
+  host.innerHTML = "";
+
+  const overdueBtn = document.createElement("button");
+  overdueBtn.className = "btn small" + (filters.overdue ? " active" : "");
+  overdueBtn.textContent = "Overdue only";
+  overdueBtn.onclick = () => {
+    filters.overdue = filters.overdue ? undefined : "true";
+    renderFilters();
+    loadBoard();
+  };
+  host.appendChild(overdueBtn);
+}
+
 async function loadBoard() {
   let tasks = [];
   try {
@@ -85,18 +100,28 @@ function cardEl(t) {
   return card;
 }
 
-// Baseline adds nothing; features override to add pills/chips.
-function cardExtras(_t) {
-  return [];
+// Extra pills shown on a card. Feature 1: due date + overdue.
+function cardExtras(t) {
+  const out = [];
+  if (t.due_date) {
+    const cls = t.overdue ? "pill overdue" : "pill due";
+    const label = t.overdue ? `Overdue ${t.due_date}` : `Due ${t.due_date}`;
+    out.push(`<span class="${cls}">${label}</span>`);
+  }
+  return out;
 }
 
-// Baseline modal has no extra fields; features inject inputs into #feature-fields.
-function renderFeatureFields(_t) {
-  document.getElementById("feature-fields").innerHTML = "";
+// Extra inputs in the modal. Feature 1: due date.
+function renderFeatureFields(task) {
+  document.getElementById("feature-fields").innerHTML = `
+    <label>Due date
+      <input id="f-due-date" type="date" value="${task && task.due_date ? task.due_date : ""}" />
+    </label>`;
 }
 
-function collectFeatureFields(_payload) {
-  // Features add their values to the payload here.
+function collectFeatureFields(payload) {
+  const due = document.getElementById("f-due-date").value;
+  payload.due_date = due || null;
 }
 
 function openModal(task = null) {
@@ -166,6 +191,8 @@ form.addEventListener("submit", async (e) => {
 document.getElementById("new-task-btn").onclick = () => openModal();
 document.getElementById("cancel-btn").onclick = closeModal;
 backdrop.addEventListener("click", (e) => { if (e.target === backdrop) closeModal(); });
+
+renderFilters();
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
