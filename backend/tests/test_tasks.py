@@ -47,6 +47,16 @@ def test_update_task(client):
     assert r.json()["title"] == "Draft"
 
 
+def test_update_task_rejects_explicit_null_title(client):
+    # An explicit null title would violate the NOT NULL column; reject it at
+    # the validation layer with a 422 rather than letting it crash the DB write.
+    task_id = client.post("/tasks", json={"title": "Draft"}).json()["id"]
+    r = client.put(f"/tasks/{task_id}", json={"title": None})
+    assert r.status_code == 422
+    # the stored title is untouched
+    assert client.get(f"/tasks/{task_id}").json()["title"] == "Draft"
+
+
 def test_delete_task(client):
     task_id = client.post("/tasks", json={"title": "Temp"}).json()["id"]
     assert client.delete(f"/tasks/{task_id}").status_code == 204

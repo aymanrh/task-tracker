@@ -85,8 +85,12 @@ class TaskUpdate(BaseModel):
     @field_validator("title")
     @classmethod
     def title_not_blank(cls, v):
+        # This validator runs only when `title` is explicitly provided (an
+        # omitted field keeps its default and is skipped). So an incoming None
+        # here is an explicit `"title": null`, which would violate the NOT NULL
+        # column downstream -- reject it as a validation error, not a DB crash.
         if v is None:
-            return v
+            raise ValueError("title must not be null")
         v = _clean_str(v)
         if not v:
             raise ValueError("title must not be blank")
