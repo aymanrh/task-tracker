@@ -23,9 +23,7 @@
 ## CI evidence
 
 - Workflow file: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
-- Latest run link or note: workflow created in this final-project pass; will
-  run automatically on the next push to `final-project` / pull request.
-  [Update this line with the Actions run URL after the first push.]
+- Latest run link or note: [Run #1](https://github.com/aymanrh/task-tracker/actions/runs/31831763981) — `success`, triggered by the push of commit `17d8194` to `final-project`.
 - Test command used by CI: `pytest -q` (run from the `backend/` working
   directory, after `pip install -r requirements.txt`), pinned to Python 3.12.
 - Shortcut check: no `continue-on-error`, no `|| true`, pytest is not
