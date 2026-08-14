@@ -55,7 +55,7 @@ cd backend
 pytest -q
 ```
 
-There are 20 tests (7 baseline CRUD + 6 due-date + 7 tags). Each test runs
+There are 21 tests (8 baseline CRUD + 6 due-date + 7 tags). Each test runs
 against a fresh temporary SQLite database (see `backend/tests/conftest.py`), so
 they never touch your real `task_tracker.db` and are safe to run repeatedly.
 
@@ -86,3 +86,81 @@ is in [`docs/midcourse/`](docs/midcourse/):
 - [`verification.md`](docs/midcourse/verification.md)
 - [`reflection.md`](docs/midcourse/reflection.md)
 - `screenshots/` (browser evidence)
+
+## Final Project
+
+Branch reviewed: `final-project`
+
+### What this submission demonstrates
+
+- Existing Task Tracker app still runs inside the intended course scope (no
+  new product features were added; `app/` and `frontend/` are unchanged).
+- CI runs the pytest suite on push and pull request
+  (`.github/workflows/ci.yml`).
+- A `Dockerfile`/`.dockerignore` are provided and were manually reviewed
+  (non-root user, no secrets baked in), but the image has not yet been
+  build- and run-verified — Docker was not available on the machine this
+  pass was done on. See `docs/release-evidence.md` for the exact commands
+  to run before relying on this.
+- AI review, security, and ownership evidence is in [`docs/`](docs/).
+
+### How to run locally
+
+```bash
+cd backend
+python -m venv .venv
+# Windows:        .venv\Scripts\activate
+# macOS / Linux:  source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Frontend (separate terminal):
+
+```bash
+cd frontend
+python -m http.server 5500
+# then open http://localhost:5500/index.html
+```
+
+### How to run tests
+
+```bash
+cd backend
+pytest -q
+```
+
+### How to run with Docker
+
+```bash
+docker build -t task-tracker .
+docker run -d --name task-tracker -p 127.0.0.1:8000:8000 task-tracker
+curl http://localhost:8000/health
+docker stop task-tracker && docker rm task-tracker
+```
+
+Port is bound to loopback only (`127.0.0.1:8000:8000`, not `8000:8000`):
+combined with this API's intentionally open CORS policy, a LAN-wide bind
+would let any other device on the network read and write tasks with no
+authentication. See `docs/final-ai-review.md` for the finding this came
+from.
+
+### Evidence files
+
+- [`docs/release-evidence.md`](docs/release-evidence.md)
+- [`docs/final-ai-review.md`](docs/final-ai-review.md)
+- [`docs/ai-playbook.md`](docs/ai-playbook.md)
+
+### AI assistance summary
+
+AI helped draft or review: CI workflow, Dockerfile, AGENTS.md, README/docs,
+a code review pass on `backend/app/repository.py`, and a security review of
+the new CI/Docker files.
+
+I verified the work by: running the full pytest suite (21 passed), starting
+the API and frontend locally and exercising the create-task flow in a real
+browser, checking `/health` returns 200, and manually checking git history
+for committed secrets or database files.
+
+One AI suggestion I rejected or corrected: see
+[`docs/final-ai-review.md`](docs/final-ai-review.md#one-ai-output-i-rejected-or-corrected).
