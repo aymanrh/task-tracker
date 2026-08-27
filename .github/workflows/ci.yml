@@ -27,3 +27,37 @@ jobs:
 
       - name: Run pytest
         run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t task-tracker .
+
+      - name: Run container
+        run: docker run -d --name task-tracker -p 127.0.0.1:8000:8000 task-tracker
+
+      - name: Wait for container to be ready
+        run: |
+          for i in $(seq 1 10); do
+            if curl -fs http://localhost:8000/health; then exit 0; fi
+            sleep 1
+          done
+          echo "Container did not become healthy in time" >&2
+          docker logs task-tracker
+          exit 1
+
+      - name: Check /health
+        run: curl -i http://localhost:8000/health
+
+      - name: Check non-root user
+        run: docker exec task-tracker whoami
+
+      - name: Stop container
+        if: always()
+        run: docker stop task-tracker && docker rm task-tracker
