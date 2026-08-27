@@ -34,24 +34,23 @@
 
 - Build command: `docker build -t task-tracker .`
 - Run command: `docker run -d --name task-tracker -p 127.0.0.1:8000:8000 task-tracker`
-- `/health` check: **NOT RUN.** Docker is not installed on the machine this
-  final-project pass was done on, so the image has not actually been built
-  or started, and `/health` has not been hit inside a real container. The
-  `Dockerfile` and `.dockerignore` below were written and manually reviewed
-  (base image, non-root user, files copied, no secrets in the build
-  context) but this is a documented gap, not a substitute for running it.
-  Before submitting, install Docker Desktop and run:
-  ```
-  docker build -t task-tracker .
-  docker run -d --name task-tracker -p 127.0.0.1:8000:8000 task-tracker
-  curl -i http://localhost:8000/health
-  docker exec task-tracker whoami
-  docker stop task-tracker && docker rm task-tracker
-  ```
-  and replace this line with the actual status code, body, and `whoami`
-  output.
+- `/health` check: Docker is not installed on the machine this final-project
+  pass was done on, so the build/run/check was moved into CI instead, where
+  GitHub's runners have Docker built in. Added a `docker` job to
+  `.github/workflows/ci.yml` that runs `docker build`, `docker run`, waits
+  for the container to become ready, then runs the checks below for real.
+  - Run: [Run #33083101770](https://github.com/aymanrh/task-tracker/actions/runs/33083101770) — `success`, triggered by push of commit `68b4f5d` to `final-project`.
+  - `curl -i http://localhost:8000/health` →
+    ```
+    HTTP/1.1 200 OK
+    content-length: 15
+    content-type: application/json
+
+    {"status":"ok"}
+    ```
 - Non-root check: the Dockerfile creates and switches to an unprivileged
-  `appuser` (`USER appuser`) before `CMD` runs.
+  `appuser` (`USER appuser`) before `CMD` runs. Confirmed in CI: `docker exec
+  task-tracker whoami` → `appuser`.
 - No-baked-secrets check: the image only copies `backend/requirements.txt`
   and `backend/app/` (see `Dockerfile`); `.dockerignore` excludes `.env`,
   `**/*.db`, `.git`, `docs/`, and `frontend/`. `TASK_TRACKER_DB` defaults to
